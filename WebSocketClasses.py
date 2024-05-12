@@ -53,3 +53,4 @@ class WebSocketClient:
         finally:
             await metrics[self.scenario_key].stop_monitoring()
             await metrics[self.scenario_key].calculate_and_save(self.parameter, 'WebSocket')
+            await asyncio.sleep(interval_standard)

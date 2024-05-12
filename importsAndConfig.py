@@ -5,6 +5,7 @@ import os
 import random
 import time
 import uuid
+from datetime import datetime
 from statistics import mean
 from time import perf_counter
 from timeit import default_timer as timer
@@ -27,8 +28,11 @@ def linear_space(start, end, num):
 # Define scenarios with consistent keys for range values
 scenarios = {
     "payload_metrics": {"start": 1000, "end": 10000, "num_values": 10, "interval": 1, "description": "Varying payload sizes."},
-    "concurrency_metrics": {"start": 1, "end": 10, "num_values": 10, "interval": 1, "description": "Varying number of clients."},
 }
+
+# Utility functions
+def generate_payload(size):
+    return json.dumps({"message": "X" * int(float(size)), "sent_time": datetime.now().isoformat(), "id": str(uuid.uuid4())})
 
 
 # Initialize the Scenario Manager

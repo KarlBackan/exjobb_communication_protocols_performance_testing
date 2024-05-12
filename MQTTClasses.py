@@ -86,7 +86,7 @@ class MQTTClient:
         await self.all_responses_received.wait()
         await metrics[self.scenario_key].stop_monitoring()
         await metrics[self.scenario_key].calculate_and_save(self.parameter, "MQTT")
-        await asyncio.sleep(2)
+        await asyncio.sleep(interval_standard)
 
     def start(self):
         self.client.connect("localhost", 1883, 60)

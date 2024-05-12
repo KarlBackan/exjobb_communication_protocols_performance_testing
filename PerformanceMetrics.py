@@ -83,9 +83,6 @@ class PerformanceMetrics:
         self.start_time = None  # Reset start time for the next monitoring session
 
 
-
-
-
 # Initialize metrics instances for each scenario
 metrics = {}
 for key, settings in scenarios.items():
