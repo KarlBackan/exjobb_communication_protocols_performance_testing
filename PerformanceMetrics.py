@@ -33,6 +33,7 @@ class PerformanceMetrics:
 
     async def monitor(self):
         initial_net_io = self.system_net_io
+        self.process.cpu_percent(interval=None)
         while self.monitoring:
             cpu = self.process.cpu_percent(interval=None)
             current_net_io = psutil.net_io_counters()
@@ -49,7 +50,7 @@ class PerformanceMetrics:
                 'resource_handles': resource_handles
             }
             self.samples.append(snapshot)
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)
             initial_net_io = current_net_io
 
     async def stop_monitoring(self):

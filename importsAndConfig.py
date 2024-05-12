@@ -13,7 +13,7 @@ import pandas as pd
 import paho.mqtt.client as mqtt
 import websockets
 import warnings
-samplesPerParameter = 10000
+samplesPerParameter = 1000
 interval_standard = 0
 payload_standard = 1024
 from ScenarioManager import ScenarioManager

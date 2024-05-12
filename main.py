@@ -29,7 +29,7 @@ async def run_scenario(scenario_key, parameters, websocket_server, scenario_mana
                 mqtt_client.payload_size = parameter
             await mqtt_client.send_messages()
 
-    # Conditional execution of SFTP operations based on user input
+
     if use_sftp:
         sftp_client = SFTPClient('localhost', 22, '1choi2edge', '4!f%q64Dq&24o', scenario_manager, scenario_key, None)
         await sftp_client.connect()
@@ -40,6 +40,8 @@ async def run_scenario(scenario_key, parameters, websocket_server, scenario_mana
                 sftp_client.payload_size = parameter
             await sftp_client.send_file()
         await sftp_client.close()
+
+
 
 async def main():
     # Initialization of scenario manager and server setups
@@ -73,7 +75,6 @@ async def main():
                 print(f"Scenario {scenario_key} not found.")
     finally:
         print("Exeing program")
-
 
 if __name__ == "__main__":
     asyncio.run(main())

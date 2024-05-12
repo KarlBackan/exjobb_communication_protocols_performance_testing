@@ -35,22 +35,36 @@ class WebSocketClient:
         self.scenario_manager = scenario_manager
         self.uri = uri
         self.scenario_key = scenario_key
-        self.parameter = parameter  # Make sure this is used correctly
-        self.payload_size = parameter  # Initialize with the passed parameter, adjust later if needed
+        self.parameter = parameter
+
+    async def send_and_receive(self, ws):
+        # Create a message
+        message = json.dumps({
+            "message": str(self.parameter),
+            "sent_time": datetime.now().isoformat(),
+            "id": str(uuid.uuid4())
+        })
+        # Send the message
+        await ws.send(message)
+        # Wait for the response immediately after sending
+        response = await ws.recv()
+        return response
 
     async def run(self):
         metrics[self.scenario_key].start_monitoring()
+        responses = []
         try:
+            # Connect to the WebSocket server
             async with connect(self.uri) as ws:
-                for _ in range(samplesPerParameter):
-                    message = json.dumps({
-                        "message": str(self.payload_size),  # Ensure payload_size is updated if parameter changes
-                        "sent_time": datetime.now().isoformat(),
-                        "id": str(uuid.uuid4())
-                    })
-                    await ws.send(message)
-                    await ws.recv()  # Assume response handling here
+                # Create a list of tasks where each task involves sending a message and waiting for its response
+                tasks = [self.send_and_receive(ws) for _ in range(samplesPerParameter)]
+                # Execute all tasks concurrently and wait for all to complete
+                responses = await asyncio.gather(*tasks)
+        except Exception as e:
+            logging.error(f"Error during WebSocket communication: {str(e)}")
         finally:
+            # Stop monitoring and process performance data
             await metrics[self.scenario_key].stop_monitoring()
             await metrics[self.scenario_key].calculate_and_save(self.parameter, 'WebSocket')
             await asyncio.sleep(interval_standard)
+            return responses

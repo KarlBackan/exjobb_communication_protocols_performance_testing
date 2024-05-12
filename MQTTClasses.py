@@ -68,22 +68,30 @@ class MQTTClient:
         client.subscribe("test/response")
 
     def on_message(self, client, userdata, msg):
+        data = json.loads(msg.payload.decode())
         # Increment response count upon each message reception
         self.response_count += 1
+
         if self.response_count >= self.expected_responses:
             self.response_count = 0
             self.all_responses_received.set()  # Signal that all messages have been received
 
     async def send_messages(self):
-        metrics[self.scenario_key].start_monitoring()
-        for num in range(samplesPerParameter):
-            message = json.dumps({"message": str(self.payload_size), "scenario_key": self.scenario_key,
-                                  "sent_time": datetime.now().isoformat(), "id": str(uuid.uuid4())})
-            self.client.publish("test/topic", message)
-            await asyncio.sleep(0)
+        async def send_message_loop():
+            for num in range(samplesPerParameter):
+                message = json.dumps({
+                    "message": str(self.payload_size),
+                    "scenario_key": self.scenario_key,
+                    "sent_time": datetime.now().isoformat(),
+                    "id": str(uuid.uuid4())
+                })
+                self.client.publish("test/topic", message)  # Ensure this is awaited if it's async
+                await asyncio.sleep(0)
 
-        # Wait for all responses to be received before proceeding
-        await self.all_responses_received.wait()
+        metrics[self.scenario_key].start_monitoring()
+        send_task = asyncio.create_task(send_message_loop())  # Create a task for sending messages
+        await self.all_responses_received.wait()  # Wait for all responses before proceeding
+        await send_task  # Optionally wait for the sending task to complete if needed
         await metrics[self.scenario_key].stop_monitoring()
         await metrics[self.scenario_key].calculate_and_save(self.parameter, "MQTT")
         await asyncio.sleep(interval_standard)

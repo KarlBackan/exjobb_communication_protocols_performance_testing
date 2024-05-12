@@ -52,15 +52,9 @@ class SFTPClient:
         for _ in range(samplesPerParameter):
             try:
                 remote_path = os.path.join(remote_directory, os.path.basename(self.file_path))
-                start_time = timer()
-                self.sftp.put(self.file_path, remote_path)  # Use a specific remote path
-                elapsed_time = timer() - start_time
-                logging.info(
-                    f"File {os.path.basename(self.file_path)} successfully uploaded in {elapsed_time:.2f} seconds to {remote_path}")
+                await asyncio.to_thread(self.sftp.put, self.file_path, remote_path)
             except Exception as e:
                 logging.error(f"Failed to upload file to {remote_path}: {str(e)}")
-            await asyncio.sleep(0)  # Simulate delay
-
         os.remove(self.file_path)  # Cleanup the single file after all uploads
         logging.info("Temporary file removed after upload attempts")
         await metrics[self.scenario_key].stop_monitoring()
