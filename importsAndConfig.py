@@ -12,8 +12,8 @@ import pandas as pd
 import paho.mqtt.client as mqtt
 import websockets
 import warnings
-samplesPerParameter = 3
-interval_standard = 0.1
+samplesPerParameter = 10000
+interval_standard = 0
 payload_standard = 1024
 from ScenarioManager import ScenarioManager
 
@@ -26,10 +26,10 @@ def linear_space(start, end, num):
 # Define scenarios
 # Define scenarios with consistent keys for range values
 scenarios = {
-    "frequency_metrics": {"start": 0.01, "end": 1, "num_values": 10, "payload_size": 50, "description": "Varying message frequency."},
-    "payload_metrics": {"start": 100, "end": 1000000, "num_values": 10, "interval": 5, "description": "Varying payload sizes."},
-    #"concurrency": {"start": 1, "end": 10, "num_values": 10, "interval": 3, "description": "Varying number of clients."}
+    "payload_metrics": {"start": 1000, "end": 10000, "num_values": 10, "interval": 1, "description": "Varying payload sizes."},
+    "concurrency_metrics": {"start": 1, "end": 10, "num_values": 10, "interval": 1, "description": "Varying number of clients."},
 }
+
 
 # Initialize the Scenario Manager
 scenario_manager = ScenarioManager(scenarios)

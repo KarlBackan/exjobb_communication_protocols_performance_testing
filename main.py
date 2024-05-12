@@ -10,23 +10,28 @@ from WebSocketClasses import WebSocketServer, WebSocketClient
 from importsAndConfig import scenarios, linear_space, logging, websockets
 
 async def run_scenario(scenario_key, parameters, websocket_server, scenario_manager, use_websocket, use_mqtt):
-    # Instances for both clients are created here. Assume that the actual client accepts scenario_key and None initially.
-    mqtt_client = MQTTClient(scenario_manager, scenario_key, None)
-    websocket_client = WebSocketClient(scenario_manager, scenario_key, "ws://localhost:8765", None)
 
     # Conditional execution of WebSocket operations based on user input
     if use_websocket:
+        websocket_client = WebSocketClient(scenario_manager, scenario_key, "ws://localhost:8765", None)
         for parameter in parameters:
             logging.info(f"WebSocket: Running {scenario_key} scenario with parameter: {parameter}")
-            websocket_server.change_parameter(scenario_key, parameter)
-            websocket_client.parameter = parameter  # Assuming dynamic parameter update is possible
-            await websocket_client.run()  # Make sure this method exists and is correctly implemented in WebSocketClient
+            websocket_server.scenario_key = scenario_key
+            websocket_server.parameter = parameter
+            websocket_client.parameter = parameter
+            if scenario_key == "payload_metrics":
+                websocket_client.payload_size = parameter  # Set payload size based on parameter
+            await websocket_client.run()
 
     # Conditional execution of MQTT operations based on user input
     if use_mqtt:
+        mqtt_client = MQTTClient(scenario_manager, scenario_key, None)
+        mqtt_client.start()
         for parameter in parameters:
             logging.info(f"MQTT: Running {scenario_key} scenario with parameter: {parameter}")
             mqtt_client.parameter = parameter  # Assuming dynamic parameter update is possible
+            if scenario_key == "payload_metrics":
+                mqtt_client.payload_size = parameter
             await mqtt_client.send_messages()  # Ensure send_messages is correctly implemented in MQTTClient
 
 async def main():
@@ -64,6 +69,7 @@ async def main():
                 logging.info(f"Data for {key} saved successfully.")
             except Exception as e:
                 logging.error(f"Failed to save data for {key}: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

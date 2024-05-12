@@ -1,4 +1,6 @@
 # Assumed scenario configurations are placed in a separate module
+from datetime import datetime
+
 from PerformanceMetrics import metrics
 from importsAndConfig import samplesPerParameter, interval_standard, payload_standard, scenarios, logging, asyncio, random, mqtt, json, timer, uuid, mean
 
@@ -33,39 +35,60 @@ class MQTTServer:
         self.client.loop_start()
         logging.info("MQTT Server started and listening")
 
+
+import json
+import asyncio
+import paho.mqtt.client as mqtt
+from datetime import datetime
+from PerformanceMetrics import metrics
+
+
 class MQTTClient:
     def __init__(self, scenario_manager, scenario_key, parameter):
         self.scenario_manager = scenario_manager
-        self.parameter = parameter
         self.scenario_key = scenario_key
-        settings = scenario_manager.get_scenario(scenario_key)
-        self.interval = settings.get('interval', interval_standard)
-        self.payload_size = settings.get('payload_size', payload_standard)
-        self.latency_list = []
+        self.parameter = parameter
+        self.settings = scenario_manager.get_scenario(scenario_key)
+        self.interval = self.settings.get('interval', interval_standard)
+
+        self.payload_size = payload_standard
+        self.response_count = 0
+        self.expected_responses = samplesPerParameter
 
         client_id = f'python-mqtt-{random.randint(0, 1000)}'
-        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=f'python-mqtt-{random.randint(0, 1000)}', protocol=mqtt.MQTTv5)
+        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=client_id, protocol=mqtt.MQTTv5)
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
-        self.client.connect("localhost", 1883, 60)
+
+        # Using an asyncio.Event to control the flow based on message reception
+        self.all_responses_received = asyncio.Event()
 
     def on_connect(self, client, userdata, flags, rc, properties=None):
+        print(f"Connected with result code {rc}")
         client.subscribe("test/response")
 
     def on_message(self, client, userdata, msg):
-        data = json.loads(msg.payload.decode())
-        latency = timer() - data['sent_time']
-        self.latency_list.append(latency)
+        # Increment response count upon each message reception
+        self.response_count += 1
+        if self.response_count >= self.expected_responses:
+            self.response_count = 0
+            self.all_responses_received.set()  # Signal that all messages have been received
 
     async def send_messages(self):
-        self.client.loop_start()
-        for _ in range(samplesPerParameter):
-            unique_id = str(uuid.uuid4())
-            message = json.dumps({"message": str(self.payload_size), "sent_time": timer(), "id": unique_id})
+        metrics[self.scenario_key].start_monitoring()
+        for num in range(samplesPerParameter):
+            message = json.dumps({"message": str(self.payload_size), "scenario_key": self.scenario_key,
+                                  "sent_time": datetime.now().isoformat(), "id": str(uuid.uuid4())})
             self.client.publish("test/topic", message)
-            await asyncio.sleep(self.interval)
-        average_latency = mean(self.latency_list) if self.latency_list else None
-        if average_latency:
-            metrics[self.scenario_key].log_message(self.parameter, "MQTT", average_latency)
-            logging.info(f"Recorded Average Latency for MQTT: {average_latency}s")
+            await asyncio.sleep(0)
 
+        # Wait for all responses to be received before proceeding
+        await self.all_responses_received.wait()
+        await metrics[self.scenario_key].stop_monitoring()
+        await metrics[self.scenario_key].calculate_and_save(self.parameter, "MQTT")
+        await asyncio.sleep(2)
+
+    def start(self):
+        self.client.connect("localhost", 1883, 60)
+        self.client.loop_start()
+        logging.info("MQTT Server started and listening")
