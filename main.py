@@ -1,9 +1,11 @@
+from credentials import SSH_username, SSH_password
 from importsAndConfig import asyncio, websockets, scenarios, linear_space, logging
 from ScenarioManager import ScenarioManager
 from MQTTClasses import MQTTClient, MQTTServer
 from WebSocketClasses import WebSocketServer, WebSocketClient
 from SFTPClasses import SFTPClient, SFTPServer
 from visualizations import plot_performance_data
+
 
 async def run_scenario(scenario_key, parameters, websocket_server, scenario_manager, use_websocket, use_mqtt, use_sftp, sftp_server):
     # Conditional execution of WebSocket operations based on user input
@@ -29,9 +31,8 @@ async def run_scenario(scenario_key, parameters, websocket_server, scenario_mana
                 mqtt_client.payload_size = parameter
             await mqtt_client.send_messages()
 
-
     if use_sftp:
-        sftp_client = SFTPClient('localhost', 22, '1choi2edge', '4!f%q64Dq&24o', scenario_manager, scenario_key, None)
+        sftp_client = SFTPClient('localhost', 22, SSH_username, SSH_password, scenario_manager, scenario_key, None)
         await sftp_client.connect()
         for parameter in parameters:
             logging.info(f"SFTP: Running {scenario_key} scenario with parameter: {parameter}")
@@ -46,7 +47,7 @@ async def main():
     mqtt_server = MQTTServer()
     mqtt_server.start()
     websocket_server = WebSocketServer(scenario_manager)
-    sftp_server = SFTPServer('localhost', 22, '1choi2edge', '4!f%q64Dq&24o')
+    sftp_server = SFTPServer('localhost', 22, SSH_username, SSH_password)
     sftp_server.start_server()
     server_task = await websockets.serve(websocket_server.handle_connection, 'localhost', 8765)
 

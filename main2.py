@@ -60,7 +60,6 @@ def linear_space(start, end, num):
     step = (end - start) / (num - 1)
     return [start + step * i for i in range(num)]
 
-# Define scenarios
 # Define scenarios with consistent keys for range values
 scenarios = {
     "frequency": {"start": 0.01, "end": 1, "num_values": 10, "payload_size": 50, "description": "Varying message frequency."},
