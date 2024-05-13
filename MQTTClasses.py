@@ -11,7 +11,6 @@ import random
 import uuid
 import paho.mqtt.client as mqtt
 from importsAndConfig import timer, scenarios
-
 class MQTTServer:
     def __init__(self):
         client_id = f'python-mqtt-{random.randint(0, 1000)}'

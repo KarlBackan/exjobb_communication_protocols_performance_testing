@@ -1,10 +1,10 @@
 from importsAndConfig import asyncio, websockets, scenarios, linear_space, logging
 from ScenarioManager import ScenarioManager
-from PerformanceMetrics import metrics
 from MQTTClasses import MQTTClient, MQTTServer
 from WebSocketClasses import WebSocketServer, WebSocketClient
 from SFTPClasses import SFTPClient, SFTPServer
-from importsAndConfig import scenarios, linear_space, logging, websockets
+from visualizations import plot_performance_data
+
 async def run_scenario(scenario_key, parameters, websocket_server, scenario_manager, use_websocket, use_mqtt, use_sftp, sftp_server):
     # Conditional execution of WebSocket operations based on user input
     if use_websocket:
@@ -40,9 +40,6 @@ async def run_scenario(scenario_key, parameters, websocket_server, scenario_mana
                 sftp_client.payload_size = parameter
             await sftp_client.send_file()
         await sftp_client.close()
-
-
-
 async def main():
     # Initialization of scenario manager and server setups
     scenario_manager = ScenarioManager(scenarios)
@@ -77,4 +74,5 @@ async def main():
         print("Exeing program")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    #asyncio.run(main())
+    plot_performance_data()
