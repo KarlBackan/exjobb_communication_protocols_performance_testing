@@ -2,8 +2,6 @@ from importsAndConfig import samplesPerParameter, generate_payload, interval_sta
 from PerformanceMetrics import metrics
 import paramiko
 import json
-import asyncio
-import uuid
 import os
 class SFTPServer:
     def __init__(self, host, port, username, password):

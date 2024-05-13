@@ -1,16 +1,7 @@
-# Assumed scenario configurations are placed in a separate module
-from datetime import datetime
-
-from PerformanceMetrics import metrics
-from importsAndConfig import samplesPerParameter, interval_standard, payload_standard, scenarios, logging, asyncio, random, mqtt, json, timer, uuid, mean
+from importsAndConfig import samplesPerParameter, interval_standard, payload_standard, scenarios, logging, asyncio, random, uuid, mqtt, json, timer, uuid, mean
+from importsAndConfig import timer
 
 # MQTTClasses.py
-import json
-import logging
-import random
-import uuid
-import paho.mqtt.client as mqtt
-from importsAndConfig import timer, scenarios
 class MQTTServer:
     def __init__(self):
         client_id = f'python-mqtt-{random.randint(0, 1000)}'
